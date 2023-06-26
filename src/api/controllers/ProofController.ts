@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
 
-import { KYCQueryMTPInput, KYCNonRevQueryMTPInput, KYCQuerySigInput, KYCNonRevQuerySigInput } from "@zidendev/zidenjs";
+import { KYCQueryMTPInput, KYCNonRevQueryMTPInput, KYCQuerySigInput, KYCNonRevQuerySigInput, query as zidenjsQuery, schema as zidenjsSchema, utils as zidenjsUtils } from "@zidendev/zidenjs";
 import { IQuery } from "../models/Service.js";
 import { IssuerService } from "../services/IssuerService.js";
 import { ProofService } from "../services/ProofService.js";
@@ -10,6 +10,8 @@ import { BadRequestError } from '../errors/http/BadRequestError.js';
 import { NotFoundError } from '../errors/http/NotFoundError.js';
 import { sendRes } from '../responses/index.js';
 import logger from '../../lib/logger/index.js';
+import { SchemaService } from '../services/SchemaService.js';
+import utils from '../utils/index.js';
 
 export interface ProofRequest {
     verifierId: string,
@@ -38,11 +40,13 @@ export class ProofController {
     serviceService: ServiceService;
     issuerService: IssuerService;
     proofService: ProofService;
+    schemaService: SchemaService;
 
     constructor() {
         this.serviceService = new ServiceService();
         this.issuerService = new IssuerService();
         this.proofService = new ProofService();
+        this.schemaService = new SchemaService();
         
         this.generateProofRequest = this.generateProofRequest.bind(this);
         this.fetchProofRequest = this.fetchProofRequest.bind(this);
@@ -102,6 +106,60 @@ export class ProofController {
             if (request === undefined) throw new NotFoundError('Request does not exist');
             const service = await this.serviceService.findOneById(request.serviceId);
             if (service === undefined) throw new NotFoundError('Service does not exist');
+
+            // check requirement
+            try {
+                const zkProofs = req.body.zkProofs;
+                const requirements = service.requirements;
+                for (let i = 0; i < requirements.length; i++) {
+                    const requirement = requirements[i];
+                    let proofRequirement = false;
+                    for (let j = 0; j < zkProofs.length; j++) {
+                        const schemaHash = BigInt(zkProofs[i].publicData[7]).toString(10);
+                        const issuerId = BigInt(zkProofs[i].publicData[4]).toString(16);
+                        const deterministicValue = zkProofs[i].publicData[10];
+                        const operator = zkProofs[i].publicData[9];
+                        const value = zidenjsQuery.calculateDeterministicValue(utils.parseBigInt(requirement.query.value), 6, Number(requirement.query.operator)).toString(10);
+                        if (schemaHash != requirement.schemaHash
+                            || !requirement.allowedIssuers.includes(issuerId)
+                            || operator != requirement.query.operator.toString()
+                            || value != deterministicValue)
+                        {
+                            continue;
+                        } else {
+                            try {
+                                const schema = await this.schemaService.findOneById(schemaHash);
+                                if (!schema) {
+                                    continue;
+                                }
+                                const jsonSchema = await utils.fetchSchemaContext((await axios.get(schema.accessUri)).data);
+                                const schemaPropertiesSlot = zidenjsSchema.schemaPropertiesSlot(jsonSchema);
+                                if (schemaPropertiesSlot[requirement.query.propertyName] == undefined) {
+                                    continue;
+                                }
+                                const slotIndex = schemaPropertiesSlot[requirement.query.propertyName].slot;
+                                if (slotIndex.toString() != zkProofs[i].publicData[8]) {
+                                    continue;
+                                }
+                                const begin = schemaPropertiesSlot[requirement.query.propertyName].begin;
+                                const end = schemaPropertiesSlot[requirement.query.propertyName].end;
+                                const mask = zidenjsUtils.createMask(begin, end);
+                                if (mask.toString() != zkProofs[i].publicData[11]) {
+                                    continue;
+                                }
+                            } catch (err: any) {
+                            }
+                            proofRequirement = true;
+                            break;        
+                        }
+                    }
+                    if (!proofRequirement) {
+                        throw new BadRequestError("Invalid proof");
+                    }
+                }
+            } catch (err: any) {
+                throw new BadRequestError("Invalid proof");
+            }
 
             const verifications = await Promise.all(req.body.zkProofs.map((proof: Proof) => {
                 return this.proofService.verifyZkProof(Number(service.networkId), proof);
