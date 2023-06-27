@@ -55,6 +55,7 @@ const env = {
         database: getOsEnvOptional('MONGODB_DATABASE') ?? 'ziden-test',
         username: getOsEnvOptional('MONGODB_USERNAME'),
         password: getOsEnvOptional('MONGODB_PASSWORD'),
+        uri: getOsEnvOptional('MONGODB_URI')
     },
     swagger: {
         enabled: toBool(getOsEnv('SWAGGER_ENABLED')),

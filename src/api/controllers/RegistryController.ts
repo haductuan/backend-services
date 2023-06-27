@@ -135,7 +135,7 @@ export class RegistryController {
                     issuer: {
                         issuerId: issuer?._id ?? '',
                         name: issuer?.name ?? 'Unknown Issuer',
-                        logoUrl: issuer?.logoUrl ?? utils.getLogoUrl('')
+                        logoUrl: utils.getLogoUrl(issuer?.logoUrl?? '')
                     },
                     network: {
                         networkId: 97,              // FIXME: TBD after finishing network routes
