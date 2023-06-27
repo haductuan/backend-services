@@ -85,7 +85,7 @@ export class ProofService {
         
         console.log(circuitQuery)
 
-        const callData = {
+        const callData: any = {
             a: [p256(proof.pi_a[0]), p256(proof.pi_a[1])],
             b: [[p256(proof.pi_b[0][1]), p256(proof.pi_b[0][0])], [p256(proof.pi_b[1][1]), p256(proof.pi_b[1][0])]],
             c: [p256(proof.pi_c[0]), p256(proof.pi_c[1])],
