@@ -10,11 +10,5 @@ export const SUPPORTED_NETWORKS = [
         "chainId": 97,
         "shortName": "bnbt",
         "networkId": 97
-    },
-    {
-        "name": "Oraichain Pro",
-        "chainId": 66666,
-        "shortName": "uso",
-        "networkId": 66666
     }
 ]

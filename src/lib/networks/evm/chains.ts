@@ -8,8 +8,7 @@ type BasicChainInformation = {
 const CHAIN_IDS = {
     ETH_MAINNET: 1,
     BNB_MAINNET: 56,
-    BNB_TESTNET: 97,
-    ORAICHAIN_PRO: 66666
+    BNB_TESTNET: 97
 };
 
 const CHAINS: { [chainId: number]: BasicChainInformation } = {
@@ -45,14 +44,7 @@ const CHAINS: { [chainId: number]: BasicChainInformation } = {
             'https://data-seed-prebsc-2-s3.binance.org:8545/',
         ],
         isTestnet: true
-    },
-    [CHAIN_IDS.ORAICHAIN_PRO]: {
-        name: 'Oraichain Pro',
-        blockExplorerUrls: ['https://scan.orai.us/'],
-        rpcUrls: [
-            'https://ethrpc.pro.orai.us/',
-        ]
-    },
+    }
 };
 
 export { CHAINS, CHAIN_IDS };
