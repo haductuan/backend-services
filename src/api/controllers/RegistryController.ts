@@ -90,7 +90,27 @@ export class RegistryController {
                         network: {
                             networkId: 97,              // FIXME: TBD after finishing network routes
                             name: 'BNB Chain Testnet'   // FIXME: TBD after finishing network routes
-                        }
+                        },
+                        requirements: await Promise.all(registry.requirements.map(async (req: any) => {
+                            const [issuers, schema] = await Promise.all([
+                                Promise.all(req.allowedIssuers.map(async (issuerId: string) => await this.issuerService.findOneById(issuerId))),
+                                this.schemaService.findOneById(req.schemaHash)
+                            ]);
+                            Object.assign(req, {
+                                'allowedIssuers': issuers.map(issuer => {
+                                    return {
+                                        'issuerId': issuer?._id ?? '',
+                                        'name': issuer?.name ?? 'Unknown Issuer',
+                                        'endpointUrl': issuer?.endpointUrl ?? ''
+                                    }
+                                }),
+                                'schema': {
+                                    'name': schema?.name ?? 'Unknown Schema',
+                                    'schemaHash': schema?.hash ?? ''
+                                }
+                            });
+                            return req;
+                        }))
                     }
                 }
             }));
@@ -140,7 +160,27 @@ export class RegistryController {
                     network: {
                         networkId: 97,              // FIXME: TBD after finishing network routes
                         name: 'BNB Chain Testnet'   // FIXME: TBD after finishing network routes
-                    }
+                    },
+                    requirements: await Promise.all(registry.requirements.map(async (req: any) => {
+                        const [issuers, schema] = await Promise.all([
+                            Promise.all(req.allowedIssuers.map(async (issuerId: string) => await this.issuerService.findOneById(issuerId))),
+                            this.schemaService.findOneById(req.schemaHash)
+                        ]);
+                        Object.assign(req, {
+                            'allowedIssuers': issuers.map(issuer => {
+                                return {
+                                    'issuerId': issuer?._id ?? '',
+                                    'name': issuer?.name ?? 'Unknown Issuer',
+                                    'endpointUrl': issuer?.endpointUrl ?? ''
+                                }
+                            }),
+                            'schema': {
+                                'name': schema?.name ?? 'Unknown Schema',
+                                'schemaHash': schema?.hash ?? ''
+                            }
+                        });
+                        return req;
+                    }))
                 }
             });
         } catch (error: any) {

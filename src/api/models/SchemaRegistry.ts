@@ -9,7 +9,8 @@ export interface ISchemaRegistry {
     updatable: boolean,
     networkId: string,
     endpointUrl: string,
-    active: boolean
+    active: boolean,
+    requirements: Array<any>
 
 }
 
