@@ -62,18 +62,6 @@ export class ProofService {
         const queryMTP = useQueryMtpValidator(networkId);
         if (queryMTP === undefined) throw 'Network is not supported';
 
-        // const input = publicData[6];
-        // console.log(BigInt(input).toString(2).padStart(198, "0"));
-        // const queryCompactInput = BigInt("0b" + BigInt(input).toString(2).padStart(198, "0").slice(64, 198)).toString();
-        // console.log(queryCompactInput)
-
-        // const circuitQuery = {
-        //     deterministicValue: publicData[7],
-        //     compactInput: queryCompactInput,
-        //     mask: publicData[8],
-        //     circuitId: 'credentialAtomicQuery'
-        // }
-
         const circuitQuery = {
             deterministicValue: publicData[10],
             mask: publicData[11],
